@@ -10,6 +10,8 @@ import {
 import {Dispatch} from 'redux'
 import {AppRootStateType} from '../../app/store'
 import {setErrorAC, SetErrorType, setLoadingStatusAC, SetLoadingStatusType} from "../../app/app-reducer";
+import {ErrorCustomType, handleServerAppError} from "../../utils/error-utils";
+import axios, {AxiosError} from 'axios';
 
 const initialState: TasksStateType = {}
 
@@ -66,14 +68,30 @@ export const fetchTasksTC = (todolistId: string) => (dispatch: Dispatch<ActionsT
             dispatch(setLoadingStatusAC('succeeded'))
         })
 }
-export const removeTaskTC = (taskId: string, todolistId: string) => (dispatch: Dispatch<ActionsType>) => {
+export const removeTaskTC =  (taskId: string, todolistId: string) => async (dispatch: Dispatch<ActionsType>) => {
     dispatch(setLoadingStatusAC('loading'))
-    todolistsAPI.deleteTask(todolistId, taskId)
-        .then(res => {
-            const action = removeTaskAC(taskId, todolistId)
-            dispatch(action)
+    try {
+        const result = await todolistsAPI.deleteTask(todolistId, taskId);
+        if (result.data.resultCode === ResultCode.SUCCEED) {
+            dispatch(removeTaskAC(taskId, todolistId))
             dispatch(setLoadingStatusAC('succeeded'))
-        })
+        } else {
+            handleServerAppError(result.data, dispatch)
+        }
+    } catch (e) {
+        if(axios.isAxiosError<ErrorCustomType>(e)) {
+            const error = e.response ? e.response.data.message : e.message
+        }
+        handleServerAppError<{item: TaskType}>(e.da, dispatch)
+    }
+    
+    // dispatch(setLoadingStatusAC('loading'))
+    // todolistsAPI.deleteTask(todolistId, taskId)
+    //     .then(res => {
+    //         const action = removeTaskAC(taskId, todolistId)
+    //         dispatch(action)
+    //         dispatch(setLoadingStatusAC('succeeded'))
+    //     })
 }
 export const addTaskTC = (title: string, todolistId: string) => (dispatch: Dispatch<ActionsType>) => {
     dispatch(setLoadingStatusAC('loading'))
@@ -84,12 +102,7 @@ export const addTaskTC = (title: string, todolistId: string) => (dispatch: Dispa
                 dispatch(addTaskAC(task))
                 dispatch(setLoadingStatusAC('succeeded'))
             } else {
-                if (res.data.messages.length) {
-                    dispatch(setErrorAC(res.data.messages[0]))
-                } else {
-                    dispatch(setErrorAC('Error occurred'))
-                }
-                dispatch(setLoadingStatusAC('failed'))
+                handleServerAppError<{ item: TaskType }>(res.data, dispatch)
             }
         })
 }
