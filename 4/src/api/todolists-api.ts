@@ -8,6 +8,23 @@ const instance = axios.create({
     }
 })
 
+type FormDataType = {
+    email: string
+    password: string
+    rememberMe: boolean
+}
+
+//auth
+
+export const authAPI = {
+    login(data: FormDataType){
+       return instance.post<AxiosResponse<ResponseType<{userId:number}>>>('auth/login',data)
+    },
+    me(){
+        return instance.get<AxiosResponse<ResponseType<{userId:number}>>>('auth/me')
+    }
+}
+
 // api
 export const todolistsAPI = {
     getTodolists() {

@@ -8,6 +8,9 @@ import FormLabel from '@mui/material/FormLabel';
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 import {useFormik} from "formik";
+import {loginTC} from "../../api/auth-reducer";
+import {useAppDispatch, useAppSelector} from "../../app/store";
+import {Navigate} from "react-router-dom";
 
 type FormikErrorType = {
     email?: string
@@ -16,6 +19,13 @@ type FormikErrorType = {
 }
 
 export const Login = () => {
+
+    const dispatch = useAppDispatch()
+    const isLoggedIn = useAppSelector(state => state.auth.isLoggedIn)
+
+    if (isLoggedIn) {
+        return <Navigate to={'/'}/>
+    }
 
     const formik = useFormik({
         initialValues: {
@@ -39,7 +49,7 @@ export const Login = () => {
             return errors
         },
         onSubmit: values => {
-            alert(JSON.stringify(values, null, 2))
+            dispatch(loginTC(values))
             formik.resetForm()
         }
     })
@@ -62,10 +72,10 @@ export const Login = () => {
                         <TextField label="Email"
                                    margin="normal"
                                    {...formik.getFieldProps('email')}
-                                   // value={formik.values.email}
-                                   // onChange={formik.handleChange}
-                                   // name={'email'}
-                                   // onBlur={formik.handleBlur}
+                            // value={formik.values.email}
+                            // onChange={formik.handleChange}
+                            // name={'email'}
+                            // onBlur={formik.handleBlur}
                         />
                         {formik.touched.email && formik.errors.email &&
                             <div style={{color: 'red'}}>{formik.errors.email}</div>}
@@ -73,10 +83,10 @@ export const Login = () => {
                                    label="Password"
                                    margin="normal"
                                    {...formik.getFieldProps('password')}
-                                   // value={formik.values.password}
-                                   // onChange={formik.handleChange}
-                                   // name={'password'}
-                                   // onBlur={formik.handleBlur}
+                            // value={formik.values.password}
+                            // onChange={formik.handleChange}
+                            // name={'password'}
+                            // onBlur={formik.handleBlur}
                         />
                         {formik.touched.password && formik.errors.password &&
                             <div style={{color: 'red'}}>{formik.errors.password}</div>}
